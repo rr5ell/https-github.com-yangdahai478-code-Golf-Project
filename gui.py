@@ -10,11 +10,17 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                               QDoubleSpinBox, QFileDialog, QGroupBox, QCheckBox,
                               QMessageBox, QTabWidget, QSpinBox)
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
-from PyQt6.QtGui import QDoubleValidator
+from PyQt6.QtGui import QDoubleValidator, QFont
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
 from physics_engine import TerrainModel, PhysicsEngine, create_demo_point_cloud
+
+# 设置字体支持中英文
+QFontDatabase = QFont
+app = QApplication(sys.argv)
+font = QFont("Microsoft YaHei", 9)
+app.setFont(font)
 
 
 class Terrain3DViewer(gl.GLViewWidget):
@@ -196,12 +202,14 @@ class GolfPuttingSimulator(QMainWindow):
 
         # 数据
         self.points = None
+        self.display_points = None  # 用于显示的点云（降采样）
         self.terrain_model = None
         self.trajectory = None
         self.start_position = np.array([0.0, 0.0, 0.0])
 
         self.init_ui()
-        self.load_demo_terrain()
+        # 不自动加载，让用户选择
+        # self.load_demo_terrain()
 
     def init_ui(self):
         """初始化UI"""
@@ -362,8 +370,8 @@ class GolfPuttingSimulator(QMainWindow):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
             '选择点云文件',
-            '',
-            '文本文件 (*.txt *.csv);;所有文件 (*.*)'
+            r'C:\Users\HS\Desktop\1117',  # 设置默认路径
+            'XYZ Files (*.xyz);;文本文件 (*.txt *.csv);;所有文件 (*.*)'
         )
 
         if file_path:
@@ -372,13 +380,33 @@ class GolfPuttingSimulator(QMainWindow):
                 if file_path.endswith('.csv'):
                     data = np.loadtxt(file_path, delimiter=',')
                 else:
-                    data = np.loadtxt(file_path)
+                    # 检测文件格式（可能有索引列）
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        first_line = f.readline().strip().split()
+
+                    if len(first_line) == 4:
+                        # 带索引的格式：index X Y Z
+                        data = np.loadtxt(file_path, encoding='utf-8')
+                        if data.shape[1] >= 4:
+                            data = data[:, 1:4]  # 取 X Y Z
+                    else:
+                        # 纯坐标格式：X Y Z
+                        data = np.loadtxt(file_path, encoding='utf-8')
 
                 # 检查数据格式
                 if data.shape[1] < 3:
                     raise ValueError('点云文件至少需要3列 (X, Y, Z)')
 
                 self.points = data[:, :3]
+
+                # 降采样以优化性能
+                if len(self.points) > 5000:
+                    step = len(self.points) // 5000
+                    self.display_points = self.points[::step]
+                    print(f"降采样：{len(self.points)} -> {len(self.display_points)}")
+                else:
+                    self.display_points = self.points
+
                 self.init_terrain()
 
             except Exception as e:
@@ -395,12 +423,12 @@ class GolfPuttingSimulator(QMainWindow):
             return
 
         try:
-            # 创建地形模型
+            # 创建地形模型（使用完整点云）
             self.terrain_model = TerrainModel(self.points, smoothing_factor=0.1)
 
-            # 更新可视化
-            self.terrain_3d.update_terrain(self.points)
-            self.top_down.update_terrain(self.points)
+            # 更新可视化（使用降采样后的点云）
+            self.terrain_3d.update_terrain(self.display_points)
+            self.top_down.update_terrain(self.display_points)
 
             # 更新起始位置到地形中心
             center = self.points.mean(axis=0)
@@ -413,7 +441,8 @@ class GolfPuttingSimulator(QMainWindow):
             self.clear_trajectory()
 
             print('地形加载成功')
-            print(f'点云数量: {len(self.points)}')
+            print(f'点云数量 (原始): {len(self.points)}')
+            print(f'点云数量 (显示): {len(self.display_points)}')
             print(f'范围: X[{self.points[:, 0].min():.2f}, {self.points[:, 0].max():.2f}], '
                   f'Y[{self.points[:, 1].min():.2f}, {self.points[:, 1].max():.2f}], '
                   f'Z[{self.points[:, 2].min():.3f}, {self.points[:, 2].max():.3f}]')
@@ -526,7 +555,7 @@ class GolfPuttingSimulator(QMainWindow):
 
 def main():
     """主函数"""
-    app = QApplication(sys.argv)
+    # app 已在文件顶部初始化
     app.setStyle('Fusion')
 
     window = GolfPuttingSimulator()

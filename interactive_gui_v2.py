@@ -16,11 +16,9 @@ import tkinter as tk
 from tkinter import filedialog
 
 # 设置中文字体支持
-try:
-    plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'Arial Unicode MS']
-    plt.rcParams['axes.unicode_minus'] = False
-except:
-    pass
+plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'Arial Unicode MS', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['font.family'] = 'sans-serif'
 
 from physics_engine import TerrainModel, PhysicsEngine
 
@@ -228,7 +226,6 @@ class InteractivePuttingSimulator:
             self.start_position[2] = self.terrain.get_elevation(event.xdata, event.ydata)
 
             # 更新起点标记
-'python', 'sys'
             self.start_marker.center = (event.xdata, event.ydata)
             self.start_marker_3d.set_data([event.xdata], [event.ydata])
             self.start_marker_3d.set_3d_properties([self.start_position[2]])
@@ -249,7 +246,7 @@ class InteractivePuttingSimulator:
         dx = event.xdata - self.start_position[0]
         dy = event.ydata - self.start_position[1]
 
-        angle = np.degrees(np.arctan2)dy, dx))
+        angle = np.degrees(np.arctan2(dy, dx))
         if angle < 0:
             angle += 360
 
@@ -320,7 +317,7 @@ class InteractivePuttingSimulator:
 
         # 运行模拟
         try:
-            self.trajectory, self.times = self.physics.simulate(self.start_positionquisition, initial_velocity)
+            self.trajectory, self.times = self.physics.simulate(self.start_position, initial_velocity)
             print(f"Simulation complete! Points: {len(self.trajectory)}, Time: {self.times[-1]:.3f}s")
         except Exception as e:
             print(f"Simulation failed: {e}")
