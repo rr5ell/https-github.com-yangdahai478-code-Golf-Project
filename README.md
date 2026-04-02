@@ -53,8 +53,25 @@ pip install -r requirements.txt
 
 ### 启动程序
 
+有两种界面可供选择：
+
+#### 1. Matplotlib 版本（推荐，无需额外依赖）
+
+```bash
+python gui_matplotlib.py
+```
+
+这个版本不依赖 pyqtgraph 和 PyQt6，仅使用 matplotlib 和 tkinter，系统自带。
+
+#### 2. PyQt6 版本（需要安装 pyqtgraph）
+
 ```bash
 python gui.py
+```
+
+需要先安装依赖：
+```bash
+pip install PyQt6 pyqtgraph
 ```
 
 ### 点云文件格式

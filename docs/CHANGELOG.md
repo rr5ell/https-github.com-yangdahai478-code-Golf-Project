@@ -1,5 +1,33 @@
 # 项目变更日志
 
+## [2026-04-02] 添加 Matplotlib 版本界面
+
+### 新增功能
+
+1. **Matplotlib GUI** (`gui_matplotlib.py`)
+   - 不依赖 pyqtgraph 和 PyQt6
+   - 仅使用 matplotlib 和 tkinter（系统自带）
+   - 解决 pyqtgraph 安装失败的问题
+   - 支持所有原有功能：点云加载、模拟、可视化
+
+### 功能特性
+
+- ✅ 俯视图和 3D 视图
+- ✅ 点云加载（XYZ/TXT/CSV 格式）
+- ✅ 演示地形加载
+- ✅ 交互式设置起点和方向
+- ✅ 力度、方向、摩擦系数滑参数整
+- ✅ 实时轨迹显示
+- ✅ 中文界面支持
+
+### 使用方法
+
+```bash
+python gui_matplotlib.py
+```
+
+---
+
 ## [2026-04-02] 界面优化和功能增强
 
 
